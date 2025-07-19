@@ -1,0 +1,6 @@
+streamlit
+langchain
+langchain-openai
+langchain-community
+SQLAlchemy
+mysql-connector-python
