@@ -68,5 +68,3 @@ llm = OpenAI( ): This initializes the AI language model from OpenAI. temperature
 create_sql_agent( ): This is the most important function. It builds a specialized agent that:
 
 
-NOTE :- Here all the project explained , My all approches is right according to me but i am not able to set virtual enviroment. 
-        i am tring to understand error but i am get the error.
