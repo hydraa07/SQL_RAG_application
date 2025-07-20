@@ -1,70 +1,83 @@
 # SQL_RAG_application
 
-Features
+ Features
+Easy Chat Interface: Built with Streamlit for a clean and interactive experience.
+MySQL Connectivity: Connects directly to your school_db MySQL database.
+Smart Query Generation: Uses LangChain + Google Gemini Pro to convert natural language into SQL and return meaningful answers.
 
-Easy Chat Interface: I used Streamlit to create a simple and user-friendly chat window.
-Natural Language Questions: You can ask questions like "How many students are there?" instead of writing complicated code.
-Connects to MySQL: The application connects directly to the MySQL database you provided.
-Smart Answers: It uses LangChain and an AI model to figure out the user's question, write the correct SQL query, and then translate the database result back into plain English.
-
-technology I Used
+Technologies
 Python
-LangChain 
-Streamlit 
-OpenAI for the AI model
-MySQL for the database
+Streamlit – For frontend UI
+LangChain – For chaining and query conversion
+Google Gemini Pro – As the Large Language Model (LLM)
+SQLAlchemy + PyMySQL – For MySQL database connectivity
+dotenv – To manage API keys securely
 
-
-Importing the Tools
-
-import streamlit as st
-from sqlalchemy import create_engine
+Required Imports (from your code)
+python
+Copy
+Edit
 import os
+import streamlit as st
 from dotenv import load_dotenv
-from langchain_community.agent_toolkits import create_sql_agent
+from sqlalchemy import create_engine
+from sqlalchemy.exc import ProgrammingError
+
 from langchain_community.utilities import SQLDatabase
-from langchain_openai import OpenAI
-streamlit: This is used to build the web page and the chat interface.
+from langchain_experimental.sql import create_sql_query_chain
+from langchain_google_genai import GoogleGenerativeAI
+What They Do:
+streamlit: Creates the web interface.
+dotenv + os: Load your secret credentials from .env.
+sqlalchemy: Connects Python to MySQL.
+langchain_experimental.sql: Contains the chain to generate SQL queries.
+GoogleGenerativeAI: Integrates Gemini Pro as the AI brain.
 
-dotenv and os: These work together to load and read your secret API key and database password from the .env file.
-sqlalchemy: This library helps Python connect to the MySQL database.
-langchain libraries: These provide the "AI brains" for the application. They help connect the language model to the database.
+Create a Virtual Environment
 
-
-Set Up the Application
-Clone the repo: git clone <your-repo-url>
-Go to the folder: cd <your-repo-name>
-Create a virtual environment: python -m venv .venv and activate it.
-Install packages: pip install -r requirements.txt
-Add API Key: Create a .env file and add your OPENAI_API_KEY and database details.
-Run it: streamlit run app.py
-Setting Up the Connection
-This section sets up the connection to your database and makes sure the API key is ready.
-
-load_dotenv()
-
-DB_USER = os.environ.get("DB_USER", "root")
+python -m venv venv
+venv\Scripts\activate  # On Windows
 
 
-db_uri = f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-engine = create_engine(db_uri)
-db = SQLDatabase(engine=engine)
-load_dotenv(): This line executes the command to load the variables from your .env file.
+pip install -r requirements.txt
 
 
-Creating the AI 
-This is the core logic of the application. Here, we create the AI "agent" that will do all the hard work.
+Set Up Environment Variables
+Create a .env file in the root folder:
 
-llm = OpenAI(temperature=0, verbose=True, api_key=OPENAI_API_KEY)
-
-agent_executor = create_sql_agent(
-    llm=llm,
-    db=db,
-    agent_type="openai-tools",
-    verbose=True
-)
-llm = OpenAI( ): This initializes the AI language model from OpenAI. temperature=0 makes the AI's answers more predictable and less random.
-
-create_sql_agent( ): This is the most important function. It builds a specialized agent that:
+GOOGLE_API_KEY="mykey"
 
 
+
+# Database connection details
+db_user = "root"
+db_password = "12345"
+db_host = "localhost"
+db_name = "school_db"
+
+
+# SQLAlchemy connection
+engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}")
+db = SQLDatabase(engine)
+This connects your Python app to a MySQL database using SQLAlchemy and wraps it with LangChain’s SQLDatabase utility.
+
+Creating the AI Logic
+llm = GoogleGenerativeAI(model="gemini-pro", google_api_key=os.environ["GOOGLE_API_KEY"])
+chain = create_sql_query_chain(llm, db)
+GoogleGenerativeAI: Loads Gemini Pro with your API key.
+
+
+Final Flow Summary
+
+response = chain.invoke({"question": question})
+cleaned_query = response.strip("```sql\n").strip("\n```")
+result = db.run(cleaned_query)
+
+
+
+Flow in plain English:
+invoke() → Ask Gemini Pro to generate SQL
+strip() → Clean the result so it’s ready to execute
+db.run() → Run the query and get the data
+
+then return query and query result
